@@ -79,12 +79,9 @@ function Home() {
             onChange={(event) => setIdea(event.target.value)}
             className="h-14 w-full rounded-lg border border-line bg-raised px-4 text-lg outline-none focus:border-ember"
           />
-          <div className="mt-5 flex flex-wrap items-center gap-4">
-            <button type="submit" className="h-12 rounded-md bg-ember px-6 font-semibold text-ink">
-              Create
-            </button>
-            <p className="text-sm text-muted">{signedIn ? `${wallet.coins} coins` : "Account required"}</p>
-          </div>
+          <button type="submit" className="mx-auto mt-5 block h-12 w-full max-w-md rounded-md bg-ember font-semibold text-ink">
+            Create
+          </button>
         </form>
         {needsAccount ? (
           <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4" role="dialog" aria-modal="true" aria-labelledby="account-title">

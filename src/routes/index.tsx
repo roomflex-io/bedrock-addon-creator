@@ -6,7 +6,7 @@ import { AccountForm, PENDING_IDEA } from "@/components/account-form";
 import { SiteHeader } from "@/components/site-header";
 import { EXAMPLES, portraitFor } from "@/lib/forge/examples";
 import { cachedPack, preloadSample, sharePack } from "@/lib/forge/save-client";
-import { newId, quoteCost, STARTER_COINS } from "@/lib/forge/spec";
+import { newId, quoteCost } from "@/lib/forge/spec";
 import { useResumePendingIdea } from "@/lib/forge/resume";
 import { useForge } from "@/lib/forge/store";
 import type { Project } from "@/lib/forge/types";
@@ -60,9 +60,7 @@ function Home() {
       <main className="mx-auto max-w-3xl px-4 pb-20 pt-12 md:pt-20">
         <p className="text-sm font-semibold tracking-wide text-ember">Minecraft workshop</p>
         <h1 className="mt-3 font-display text-5xl text-fg md:text-6xl">Build anything you imagine for your world.</h1>
-        <p className="mt-4 max-w-xl text-lg text-muted">
-          One line. Create spends 1 coin. You start with {STARTER_COINS}.
-        </p>
+        <p className="mt-4 max-w-xl text-lg text-muted">One line. Then hit Create.</p>
         <form
           className="mt-8"
           onSubmit={(event) => {
@@ -70,6 +68,7 @@ function Home() {
             createFromIdea();
           }}
         >
+          <p className="mb-3 text-2xl font-bold text-ember">First creation free</p>
           <label className="sr-only" htmlFor="idea">What do you want to make?</label>
           <input
             id="idea"

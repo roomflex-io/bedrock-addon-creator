@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { authClient, authEnabled } from "./client";
+import { supabase, supabaseConfigured } from "./supabase";
 
 /** Normalized user shape used across the app, auth on or off. */
 export type AppUser = {
@@ -58,9 +59,45 @@ const DEV_STATE: CurrentUserState = { user: DEV_USER, isPending: false };
  * call keeps a stable hook order across every render of a given component.
  */
 export function useCurrentUserState(): CurrentUserState {
+  if (supabaseConfigured) return useSupabaseUserState();
   if (!authEnabled) return DEV_STATE;
   // eslint-disable-next-line react-hooks/rules-of-hooks -- authEnabled is constant for the app's lifetime
   return useSessionUserState();
+}
+
+function useSupabaseUserState(): CurrentUserState {
+  const [state, setState] = useState<CurrentUserState>({ user: null, isPending: true });
+  useEffect(() => {
+    if (!supabase) {
+      setState({ user: null, isPending: false });
+      return;
+    }
+    let stop = false;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (stop) return;
+      setState({ user: mapSupabaseUser(data.session?.user), isPending: false });
+    });
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setState({ user: mapSupabaseUser(session?.user), isPending: false });
+    });
+    return () => {
+      stop = true;
+      data.subscription.unsubscribe();
+    };
+  }, []);
+  return state;
+}
+
+function mapSupabaseUser(user: { id: string; email?: string | null; user_metadata?: { name?: string; full_name?: string; avatar_url?: string } } | null | undefined): AppUser | null {
+  if (!user) return null;
+  const name = user.user_metadata?.name ?? user.user_metadata?.full_name ?? null;
+  return {
+    id: user.id,
+    displayName: name,
+    primaryEmail: user.email ?? null,
+    profileImageUrl: user.user_metadata?.avatar_url ?? null,
+    isDevFallback: false,
+  };
 }
 
 function useSessionUserState(): CurrentUserState {

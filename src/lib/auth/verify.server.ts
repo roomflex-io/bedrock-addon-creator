@@ -1,6 +1,7 @@
 import { getRequest } from "@tanstack/react-start/server";
 import { gateIdentityEnabled } from "./gate-identity.server";
 import { auth, authConfigured } from "./server";
+import { supabaseServerConfigured, verifySupabaseAccessToken } from "./supabase.server";
 
 /**
  * Server-side session resolution (server-only).
@@ -57,6 +58,9 @@ export type VerifiedUser = { id: string; email: string | null };
 export async function getSessionUser(
   bearerToken?: string,
 ): Promise<VerifiedUser | null> {
+  if (supabaseServerConfigured) {
+    return verifySupabaseAccessToken(bearerToken);
+  }
   if (!authConfigured && !gateIdentityEnabled()) return null;
   const request = getRequest();
   if (!request) return null;
@@ -82,6 +86,11 @@ export async function getSessionUser(
  * - Auth disabled + no database -> the shared dev user id.
  */
 export async function requireUserId(bearerToken?: string): Promise<string> {
+  if (supabaseServerConfigured) {
+    const user = await verifySupabaseAccessToken(bearerToken);
+    if (!user) throw new UnauthorizedError();
+    return user.id;
+  }
   if (!authConfigured && !gateIdentityEnabled()) {
     if (databaseConfigured) {
       throw new Error(

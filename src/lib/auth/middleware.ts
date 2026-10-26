@@ -31,7 +31,9 @@ export const authMiddleware = createMiddleware({ type: "function" })
     // cookie, so forward it to the server. Null when deployed (cookie auth), so
     // this is a no-op there.
     const { getBearerToken } = await import("./client");
-    return next({ sendContext: { bearerToken: getBearerToken() ?? undefined } });
+    const { getSupabaseAccessToken, supabaseConfigured } = await import("./supabase");
+    const token = supabaseConfigured ? await getSupabaseAccessToken() : getBearerToken();
+    return next({ sendContext: { bearerToken: token ?? undefined } });
   })
   .server(async ({ next, context }) => {
     // ONLY import `*.server` modules here. This file is dual client/server

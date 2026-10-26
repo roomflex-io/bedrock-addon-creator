@@ -14,7 +14,7 @@ export const Route = createRootRoute({
       { title: "Anvil" },
       {
         name: "description",
-        content: "Build Minecraft Bedrock add-ons in the browser. Describe a creation, tune it, and download the .mcaddon.",
+        content: "Build Minecraft add-ons in the browser. Describe a creation, tune it, and download it.",
       },
       { name: "theme-color", content: "#14120e" },
     ],

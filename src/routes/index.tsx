@@ -58,7 +58,7 @@ function Home() {
     <div className="min-h-dvh bg-bg">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-4 pb-20 pt-12 md:pt-20">
-        <p className="text-sm font-semibold tracking-wide text-ember">Minecraft Bedrock workshop</p>
+        <p className="text-sm font-semibold tracking-wide text-ember">Minecraft workshop</p>
         <h1 className="mt-3 font-display text-5xl text-fg md:text-6xl">Build anything you imagine for your world.</h1>
         <p className="mt-4 max-w-xl text-lg text-muted">
           One line. Create spends 1 coin. You start with {STARTER_COINS}.

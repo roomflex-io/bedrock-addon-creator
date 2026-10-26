@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { EXAMPLES, portraitFor } from "@/lib/forge/examples";
+import { EXAMPLES } from "@/lib/forge/examples";
+import { FigureStill } from "@/components/creator/figure-still";
 import { openExample } from "@/routes/index";
 
 export const Route = createFileRoute("/discover")({ component: Discover });
@@ -19,7 +20,6 @@ function Discover() {
           {EXAMPLES.map((project) => {
             const spec = project.generationHistory[0]?.spec;
             if (!spec) return null;
-            const portrait = portraitFor(spec.name);
             return (
               <button
                 key={project.id}
@@ -27,11 +27,7 @@ function Discover() {
                 onClick={() => openExample(project, navigate, user?.id)}
                 className="rounded-lg border border-line bg-raised p-4 text-left"
               >
-                {portrait ? (
-                  <img src={portrait} alt="" className="mb-4 aspect-[4/3] w-full rounded-md object-cover" />
-                ) : (
-                  <div className="mb-4 h-2 rounded-full" style={{ background: spec.appearance.primary }} />
-                )}
+                <FigureStill spec={spec} className="mb-4 aspect-[4/3] w-full rounded-md" />
                 <p className="font-display text-3xl">{spec.name}</p>
                 <p className="mt-2 text-sm text-muted">{spec.summary}</p>
                 <p className="mt-3 text-sm text-ember">Open in the workshop</p>

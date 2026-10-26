@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { X } from "lucide-react";
 import { AccountForm, PENDING_IDEA } from "@/components/account-form";
 import { SiteHeader } from "@/components/site-header";
-import { EXAMPLES, portraitFor } from "@/lib/forge/examples";
+import { EXAMPLES } from "@/lib/forge/examples";
+import { FigureStill } from "@/components/creator/figure-still";
 import { cachedPack, preloadSample, sharePack } from "@/lib/forge/save-client";
 import { newId, quoteCost } from "@/lib/forge/spec";
 import { useResumePendingIdea } from "@/lib/forge/resume";
@@ -138,7 +139,6 @@ function ExampleCard({ project }: { project: Project }) {
     void preloadSample();
   }, []);
   if (!spec) return null;
-  const portrait = portraitFor(spec.name);
 
   async function savePack() {
     const file = cachedPack("sample");
@@ -165,11 +165,7 @@ function ExampleCard({ project }: { project: Project }) {
         onClick={() => openExample(project, navigate, user?.id)}
         className="w-full text-left"
       >
-        {portrait ? (
-          <img src={portrait} alt="" className="mb-4 aspect-[4/3] w-full rounded-md object-cover" />
-        ) : (
-          <span className="mb-4 block h-10 rounded-md" style={{ background: spec.appearance.primary }} />
-        )}
+        <FigureStill spec={spec} className="mb-4 aspect-[4/3] w-full rounded-md" />
         <p className="font-display text-2xl">{spec.name}</p>
         <p className="mt-1 text-sm text-muted">{spec.summary}</p>
       </button>

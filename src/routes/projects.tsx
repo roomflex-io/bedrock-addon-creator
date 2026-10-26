@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { deleteCloudProject } from "@/lib/forge/cloud";
-import { portraitFor } from "@/lib/forge/examples";
+import { FigureStill } from "@/components/creator/figure-still";
 import { selectSpec, useForge } from "@/lib/forge/store";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 
@@ -36,13 +36,12 @@ function Projects() {
         <ul className="mt-8 space-y-3">
           {list.map((project) => {
             const spec = selectSpec(project);
-            const portrait = portraitFor(spec?.name);
             return (
               <li key={project.id} className="flex items-center gap-3 rounded-lg border border-line bg-raised p-4">
-                {portrait ? (
-                  <img src={portrait} alt="" className="h-16 w-16 shrink-0 rounded-md object-cover" />
+                {spec ? (
+                  <FigureStill spec={spec} className="h-16 w-16 shrink-0 rounded-md" />
                 ) : (
-                  <span className="h-12 w-12 shrink-0 rounded-md" style={{ background: spec?.appearance.primary ?? "#e39b3a" }} />
+                  <span className="h-12 w-12 shrink-0 rounded-md bg-surface" />
                 )}
                 <button
                   type="button"

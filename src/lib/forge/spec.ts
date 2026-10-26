@@ -12,9 +12,8 @@ import type {
 
 export const STARTER_COINS = 3;
 
-export function quoteCost(mode: ForgeMode, idea: string, _existingReady: number): number {
-  if (mode === "create") return 1;
-  return idea.trim().length > 280 ? 2 : 1;
+export function quoteCost(mode: ForgeMode, _idea: string, _existingReady: number): number {
+  return mode === "create" || mode === "edit" ? 1 : 1;
 }
 
 export function newId(): string {

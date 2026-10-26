@@ -23,6 +23,9 @@ export function Workspace({ projectId }: { projectId: string }) {
   const accountReady = useForge((state) => state.accountReady);
   const [finalised, setFinalised] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [view, setView] = useState<"preview" | "chat">("preview");
+  const [line, setLine] = useState("");
+  const wallet = useForge((state) => state.wallet);
   const started = useRef(false);
   const userRef = useRef(user);
   userRef.current = user;
@@ -106,19 +109,69 @@ export function Workspace({ projectId }: { projectId: string }) {
         <Link to="/" aria-label="Workshop" className="grid size-11 place-items-center rounded-md border border-line">
           <ChevronLeft className="size-4" />
         </Link>
+        <Link to="/projects" className="text-sm text-muted">Creations</Link>
         <div className="min-w-0 flex-1">
           <p className="truncate font-display text-lg">{spec?.name ?? "Creating"}</p>
-          <p className="truncate text-xs text-muted">{shaping ? "Using 1 coin" : finalised ? "Final" : "Preview"}</p>
+          <p className="truncate text-xs text-muted">{shaping ? "Making it" : finalised ? "Final" : "Preview"}</p>
         </div>
+        <button type="button" className={`h-9 rounded-md px-3 text-sm ${view === "preview" ? "bg-surface" : "text-muted"}`} onClick={() => setView("preview")}>Preview</button>
+        <button type="button" className={`h-9 rounded-md px-3 text-sm ${view === "chat" ? "bg-surface" : "text-muted"}`} onClick={() => setView("chat")}>Chat</button>
         <CoinPill />
       </header>
 
       <div className="min-h-0 flex-1">
-        <PreviewStage spec={spec ?? null} shaping={shaping} idea={project.idea} />
+        {view === "chat" ? (
+          <div className="flex h-full flex-col">
+            <ul className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+              <li className="rounded-md bg-surface px-3 py-2 text-sm">{project.idea}</li>
+              {project.generationHistory.map((entry) => (
+                <li key={entry.id} className="rounded-md border border-line px-3 py-2 text-sm text-muted">{entry.note}</li>
+              ))}
+              {project.phaseMessage ? <li className="text-sm text-ember">{project.phaseMessage}</li> : null}
+            </ul>
+            <form
+              className="flex gap-2 border-t border-line p-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const text = line.trim();
+                if (!text || text.length > 120) {
+                  toast("One short line.");
+                  return;
+                }
+                if (wallet.starterGranted && wallet.coins < 1) {
+                  toast("Not enough coins.");
+                  return;
+                }
+                setLine("");
+                setView("preview");
+                void runForge({
+                  projectId,
+                  idea: text,
+                  mode: "edit",
+                  signedIn: Boolean(user),
+                  ownerId: user?.id,
+                });
+              }}
+            >
+              <input
+                value={line}
+                maxLength={120}
+                placeholder="Make the wings bigger"
+                onChange={(event) => setLine(event.target.value)}
+                className="h-11 min-w-0 flex-1 rounded-md border border-line bg-bg px-3 outline-none focus:border-ember"
+              />
+              <button type="submit" disabled={shaping} className="h-11 shrink-0 rounded-md bg-ember px-3 text-sm font-semibold text-ink disabled:opacity-40">
+                Change · 1 coin
+              </button>
+            </form>
+          </div>
+        ) : (
+          <PreviewStage spec={spec ?? null} shaping={shaping} idea={project.idea} />
+        )}
       </div>
 
       {shaping ? (
-        <p className="border-t border-line px-4 py-5 text-center text-muted">Creating it now. This uses 1 coin.</p>
+        <p className="border-t border-line px-4 py-5 text-center text-muted">Making it. This uses 1 coin.</p>
       ) : spec && !finalised ? (
         <form
           className="space-y-4 border-t border-line bg-raised px-4 py-4"
@@ -127,6 +180,7 @@ export function Workspace({ projectId }: { projectId: string }) {
             setFinalised(true);
           }}
         >
+          <p className="text-sm text-muted">Health, damage, and spawn are free. Chat changes cost 1 coin.</p>
           <Range label="Health" min={1} max={spec.type === "mob" ? 1000 : 500} value={spec.health} onChange={(value) => setStat((draft) => { draft.health = value; })} />
           <Range label="Damage" min={0} max={40} value={spec.damage} onChange={(value) => setStat((draft) => { draft.damage = value; })} />
           <label className="block text-sm text-muted">

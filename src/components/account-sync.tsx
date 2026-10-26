@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { listCloudProjects, saveCloudProject, syncAccount } from "@/lib/forge/cloud";
+import { listCloudProjects, saveCloudProject, syncAccount, grantStarter } from "@/lib/forge/cloud";
 import { useForge } from "@/lib/forge/store";
 
 export function AccountSync() {
@@ -26,7 +26,7 @@ export function AccountSync() {
     const guest = useForge.getState().wallet;
     void (async () => {
       try {
-        const [wallet, remote] = await Promise.all([
+        const [synced, remote] = await Promise.all([
           syncAccount({
             data: {
               guestCoins: guest.coins,
@@ -37,6 +37,11 @@ export function AccountSync() {
           listCloudProjects(),
         ]);
         if (cancelled) return;
+        let wallet = synced;
+        if (!wallet.starterGranted) {
+          const granted = await grantStarter();
+          if (granted.ok) wallet = { coins: granted.coins, grantClaimed: wallet.grantClaimed, starterGranted: true };
+        }
         setWallet({
           coins: wallet.coins,
           grantClaimed: wallet.grantClaimed,
@@ -45,7 +50,9 @@ export function AccountSync() {
         mergeRemote(remote);
         claimOwner(userId);
       } catch {
-        // Keep the local bench if the account store is briefly unreachable.
+        if (!cancelled && user && !user.isDevFallback && !useForge.getState().wallet.starterGranted) {
+          useForge.getState().grantStarterLocal();
+        }
       } finally {
         if (!cancelled) setAccountReady(true);
       }

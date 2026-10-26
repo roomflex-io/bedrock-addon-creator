@@ -1,40 +1,56 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { AccountForm, PENDING_IDEA } from "@/components/account-form";
 import { SiteHeader } from "@/components/site-header";
 import { EXAMPLES, portraitFor } from "@/lib/forge/examples";
 import { cachedPack, preloadSample, sharePack } from "@/lib/forge/save-client";
 import { newId, quoteCost, STARTER_COINS } from "@/lib/forge/spec";
+import { useResumePendingIdea } from "@/lib/forge/resume";
 import { useForge } from "@/lib/forge/store";
 import type { Project } from "@/lib/forge/types";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { supabaseConfigured } from "@/lib/auth/supabase";
 
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
   const navigate = useNavigate();
-  const [idea, setIdea] = useState("Make me a giant lava golem with 300 health that throws fireballs.");
+  const [idea, setIdea] = useState("");
+  const [needsAccount, setNeedsAccount] = useState(false);
   const hydrated = useForge((state) => state.hydrated);
   const wallet = useForge((state) => state.wallet);
-  const projects = useForge((state) => state.projects);
-  const ready = Object.values(projects).filter((project) => project.generationHistory.length > 0).length;
-  const cost = quoteCost("create", idea, hydrated ? ready : 0);
-  const starterPending = hydrated && !wallet.starterGranted;
-  const covered = wallet.coins + (starterPending ? STARTER_COINS : 0);
+  const { user, isPending } = useCurrentUserState();
+  const signedIn = Boolean(user && !user.isDevFallback);
+  const cost = quoteCost("create", idea, 0);
+  useResumePendingIdea();
 
-  function createFromIdea() {
-    const trimmed = idea.trim();
-    if (!trimmed) {
-      toast("Describe something first.");
-      return;
-    }
-    if (hydrated && covered < cost) {
-      toast("Not enough coins for another creation.");
+  function start(trimmed: string) {
+    if (hydrated && wallet.coins < cost && wallet.starterGranted) {
+      toast("Not enough coins.");
       return;
     }
     const id = newId();
     useForge.getState().stashPending(id, trimmed);
     void navigate({ to: "/create/$projectId", params: { projectId: id } });
+  }
+
+  function createFromIdea() {
+    const trimmed = idea.trim();
+    if (!trimmed) {
+      toast("Say what you want. One line.");
+      return;
+    }
+    if (trimmed.length > 120) {
+      toast("Keep it to one short line.");
+      return;
+    }
+    if (supabaseConfigured && !isPending && !signedIn) {
+      localStorage.setItem(PENDING_IDEA, trimmed);
+      setNeedsAccount(true);
+      return;
+    }
+    start(trimmed);
   }
 
   return (
@@ -44,7 +60,7 @@ function Home() {
         <p className="text-sm font-semibold tracking-wide text-ember">Minecraft Bedrock workshop</p>
         <h1 className="mt-3 font-display text-5xl text-fg md:text-6xl">Build anything you imagine for your world.</h1>
         <p className="mt-4 max-w-xl text-lg text-muted">
-          Describe it, spend 1 coin, preview the model, set health, damage, and spawn, then finalise.
+          One line. Create spends 1 coin. You start with {STARTER_COINS}.
         </p>
         <form
           className="mt-8"
@@ -54,35 +70,26 @@ function Home() {
           }}
         >
           <label className="sr-only" htmlFor="idea">What do you want to make?</label>
-          <textarea
+          <input
             id="idea"
             value={idea}
+            maxLength={120}
+            placeholder="A flying dragon"
             onChange={(event) => setIdea(event.target.value)}
-            className="h-36 w-full resize-none rounded-lg border border-line bg-raised px-4 py-4 text-lg outline-none focus:border-ember"
+            className="h-14 w-full rounded-lg border border-line bg-raised px-4 text-lg outline-none focus:border-ember"
           />
-          <div className="mt-3 flex flex-wrap gap-2">
-            {EXAMPLES.map((example) => (
-              <button
-                key={example.id}
-                type="button"
-                className="rounded-full border border-line px-3 py-2 text-sm text-muted hover:text-fg"
-                onClick={() => setIdea(example.idea)}
-              >
-                {example.generationHistory[0]?.spec.name}
-              </button>
-            ))}
-          </div>
           <div className="mt-5 flex flex-wrap items-center gap-4">
             <button type="submit" className="h-12 rounded-md bg-ember px-6 font-semibold text-ink">
-              Create · {cost} coin
+              Create
             </button>
-            <p className="text-sm text-muted">
-              {starterPending
-                ? `First creation adds ${STARTER_COINS} coins, then uses 1.`
-                : `Balance after ${Math.max(0, wallet.coins - cost)}`}
-            </p>
+            <p className="text-sm text-muted">{signedIn ? `${wallet.coins} coins` : "Account required"}</p>
           </div>
         </form>
+        {needsAccount ? (
+          <div className="mt-8 rounded-lg border border-line bg-raised p-4">
+            <AccountForm onSignedIn={() => start(idea.trim())} />
+          </div>
+        ) : null}
       </main>
       <section className="mx-auto max-w-3xl px-4 pb-16">
         <div className="mb-4 flex items-end justify-between">

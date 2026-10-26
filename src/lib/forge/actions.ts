@@ -69,6 +69,11 @@ export async function runForge(options: {
     });
 
     if (!result.ok) {
+      if (result.error.startsWith("Only Minecraft")) {
+        useForge.getState().setPhase(projectId, "error", result.error);
+        toast(result.error);
+        return;
+      }
       if (mode === "create") {
         const bench = benchShape(trimmed, null);
         useForge.getState().pushGeneration(projectId, {

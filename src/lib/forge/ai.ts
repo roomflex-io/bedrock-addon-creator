@@ -12,10 +12,11 @@ function allowCall(): boolean {
   return true;
 }
 
-const SYSTEM = `You are Anvil, a workshop that turns a sentence into one Minecraft Bedrock creation.
-Reply with one JSON object only. Schema:
+const SYSTEM = `You are Anvil. You only turn a short request into one Minecraft Bedrock add-on (a mob, item, block, or weapon). Nothing else.
+If the request is not a Minecraft creation, reply with {"refused":true,"changeNote":"Only Minecraft add-ons."}
+Otherwise reply with one JSON object only. Schema:
 {"type":"mob"|"item"|"block"|"weapon","name":string,"summary":string,"health":number,"damage":number,"movementSpeed":number,"scale":number,"behavior":"hostile"|"neutral"|"passive","friendlyByDay":boolean,"silhouette":"humanoid"|"dragon"|"beast"|"blade"|"orb"|"block","spawn":{"where":string,"rarity":"common"|"uncommon"|"rare"|"legendary"},"drops":[{"item":string,"quantity":number,"chance":number}],"abilities":[{"name":string,"type":"projectile"|"summon"|"aura"|"melee"|"passive","detail":string,"cooldown":number,"damage":number,"range":number}],"appearance":{"material":string,"primary":"#hex","secondary":"#hex","glow":"#hex","notes":string},"sound":string,"animation":string,"versionLabel":string,"changeNote":string}
-Constraints: health 1-1000 for mobs and 1-500 otherwise. damage 0-40. movementSpeed 0-0.45. scale 0.4-4. At most 4 abilities and 4 drops. chance is 0 to 1. Names are 1-4 words. versionLabel is at most 6 words. If a current creation is provided, change only what was asked and keep the rest. Write summary, notes, sound, and animation in plain language. No file formats.`;
+Constraints: health 1-1000 for mobs and 1-500 otherwise. damage 0-40. movementSpeed 0-0.45. scale 0.4-4. At most 3 abilities and 3 drops. chance is 0 to 1. Names are 1-3 words. summary is one short sentence. changeNote is under 12 words. versionLabel is under 4 words. Pick silhouette from the creature: dragon, beast, humanoid, blade, orb, or block. Use specific colours, not grey. If a current creation is provided, change only what was asked.`;
 
 function extractJson(text: string): unknown {
   const trimmed = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
@@ -87,7 +88,10 @@ export const shapeIdea = createServerFn({ method: "POST" })
         choices?: { message?: { content?: string } }[];
       };
       const content = body.choices?.[0]?.message?.content ?? "";
-      const parsed = extractJson(content) as { versionLabel?: string; changeNote?: string };
+      const parsed = extractJson(content) as { versionLabel?: string; changeNote?: string; refused?: boolean };
+      if (parsed.refused) {
+        return { ok: false as const, error: "Only Minecraft add-ons.", cost: 0 };
+      }
       const spec = normalizeSpec(parsed, data.idea);
       const label = String(parsed.versionLabel ?? "").trim().slice(0, 48) || (data.mode === "create" ? `Original ${spec.name}` : "Updated");
       const note = String(parsed.changeNote ?? "").trim().slice(0, 180) || spec.summary;

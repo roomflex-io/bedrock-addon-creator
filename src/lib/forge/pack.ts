@@ -1,5 +1,6 @@
-import { identifier, slugify } from "./spec";
+import { figureCubes } from "./figure";
 import { isLavaGolem, lavaGolemAnimation, lavaGolemCombat, lavaGolemGeometry, lavaGolemParticle } from "./golem";
+import { identifier, slugify } from "./spec";
 import type { Ability, PackIds, Spec } from "./types";
 
 export type PackFile = {
@@ -187,30 +188,12 @@ function blockBehavior(spec: Spec): unknown {
 
 function geometry(spec: Spec): unknown {
   if (isLavaGolem(spec)) return lavaGolemGeometry();
-  const bones =
-    spec.silhouette === "blade"
-      ? [
-          { name: "body", pivot: [0, 0, 0], cubes: [{ origin: [-1, 0, -1], size: [2, 14, 2], uv: [0, 0] }] },
-          { name: "edge", pivot: [0, 14, 0], cubes: [{ origin: [-2, 14, -1], size: [4, 16, 2], uv: [16, 0] }] },
-        ]
-      : spec.silhouette === "orb" || spec.silhouette === "block"
-        ? [{ name: "body", pivot: [0, 8, 0], cubes: [{ origin: [-6, 2, -6], size: [12, 12, 12], uv: [0, 0] }] }]
-        : spec.silhouette === "dragon"
-          ? [
-              { name: "body", pivot: [0, 14, 0], cubes: [{ origin: [-6, 10, -10], size: [12, 8, 20], uv: [0, 0] }] },
-              { name: "head", pivot: [0, 16, 10], cubes: [{ origin: [-4, 14, 8], size: [8, 6, 10], uv: [0, 28] }] },
-              { name: "wingLeft", pivot: [6, 16, 0], cubes: [{ origin: [6, 14, -8], size: [14, 1, 12], uv: [32, 0] }] },
-              { name: "wingRight", pivot: [-6, 16, 0], cubes: [{ origin: [-20, 14, -8], size: [14, 1, 12], uv: [32, 14] }] },
-            ]
-          : [
-              { name: "body", pivot: [0, 12, 0], cubes: [{ origin: [-6, 10, -4], size: [12, 14, 8], uv: [0, 0] }] },
-              { name: "head", pivot: [0, 24, 0], cubes: [{ origin: [-4, 22, -4], size: [8, 8, 8], uv: [32, 0] }] },
-              { name: "armLeft", pivot: [6, 22, 0], cubes: [{ origin: [6, 8, -2], size: [4, 14, 4], uv: [0, 32] }] },
-              { name: "armRight", pivot: [-6, 22, 0], cubes: [{ origin: [-10, 8, -2], size: [4, 14, 4], uv: [16, 32] }] },
-              { name: "legLeft", pivot: [3, 10, 0], cubes: [{ origin: [1, 0, -2], size: [4, 10, 4], uv: [32, 32] }] },
-              { name: "legRight", pivot: [-3, 10, 0], cubes: [{ origin: [-5, 0, -2], size: [4, 10, 4], uv: [48, 32] }] },
-            ];
-
+  const bones = figureCubes(spec).map((cube) => ({
+    name: cube.name,
+    pivot: [0, cube.origin[1] + cube.size[1] / 2, 0],
+    cubes: [{ origin: cube.origin, size: cube.size, uv: [0, 0] }],
+  }));
+  const wide = spec.silhouette === "dragon";
   return {
     format_version: "1.12.0",
     "minecraft:geometry": [
@@ -219,9 +202,9 @@ function geometry(spec: Spec): unknown {
           identifier: `geometry.anvil.${slugify(spec.name)}`,
           texture_width: 64,
           texture_height: 64,
-          visible_bounds_width: 4,
-          visible_bounds_height: 4,
-          visible_bounds_offset: [0, 1, 0],
+          visible_bounds_width: wide ? 8 : 4,
+          visible_bounds_height: wide ? 5 : 4,
+          visible_bounds_offset: [0, 1.5, 0],
         },
         bones,
       },

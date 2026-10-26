@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Minus, Plus, RotateCcw } from "lucide-react";
 import type { Spec } from "@/lib/forge/types";
+import { figureCubes } from "@/lib/forge/figure";
 
 type PreviewProps = {
   spec: Spec | null;
@@ -63,7 +64,7 @@ export function PreviewStage({ spec, shaping, idea }: PreviewProps) {
       const rebuild = () => {
         const current = specRef.current;
         const next = current
-          ? `${current.silhouette}|${current.scale}|${current.appearance.primary}|${current.appearance.secondary}|${current.appearance.glow}|${current.type}`
+          ? `${current.name}|${current.silhouette}|${current.scale}|${current.appearance.primary}|${current.appearance.secondary}|${current.appearance.glow}`
           : "";
         if (next === signature) return;
         signature = next;
@@ -74,59 +75,24 @@ export function PreviewStage({ spec, shaping, idea }: PreviewProps) {
         const glow = new THREE.MeshStandardMaterial({
           color: current.appearance.glow,
           emissive: current.appearance.glow,
-          emissiveIntensity: 0.7,
-          roughness: 0.4,
+          emissiveIntensity: 0.85,
+          roughness: 0.35,
         });
-        const box = (
-          w: number,
-          h: number,
-          d: number,
-          material: typeof primary,
-          x: number,
-          y: number,
-          z: number,
-        ) => {
-          const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
-          mesh.position.set(x, y, z);
-          mesh.castShadow = false;
-          return mesh;
-        };
-        const scale = current.scale;
+        const scale = current.scale / 16;
         const figure = new THREE.Group();
-        figure.scale.setScalar(scale);
-        if (current.silhouette === "dragon") {
-          figure.add(box(1.1, 0.7, 2, primary, 0, 1.3, 0));
-          figure.add(box(0.7, 0.5, 0.9, secondary, 0, 1.55, 1.15));
-          figure.add(box(1.5, 0.08, 0.9, secondary, 1.2, 1.55, 0));
-          figure.add(box(1.5, 0.08, 0.9, secondary, -1.2, 1.55, 0));
-          figure.add(box(0.12, 0.12, 0.12, glow, 0.18, 1.7, 1.5));
-          figure.add(box(0.12, 0.12, 0.12, glow, -0.18, 1.7, 1.5));
-        } else if (current.silhouette === "blade") {
-          figure.add(box(0.16, 1.3, 0.16, secondary, 0, 0.7, 0));
-          figure.add(box(0.28, 1.5, 0.1, primary, 0, 2, 0));
-          figure.add(box(0.08, 1.2, 0.04, glow, 0, 2.05, 0.06));
-        } else if (current.silhouette === "block" || current.silhouette === "orb") {
-          figure.add(box(1.2, 1.2, 1.2, primary, 0, 0.9, 0));
-          figure.add(box(0.45, 0.2, 0.45, glow, 0, 1.55, 0));
-        } else if (current.silhouette === "beast") {
-          figure.add(box(1.4, 0.7, 0.8, primary, 0, 0.8, 0));
-          figure.add(box(0.55, 0.5, 0.6, secondary, 0, 1.15, 0.55));
-          figure.add(box(0.12, 0.1, 0.1, glow, 0.14, 1.25, 0.82));
-          figure.add(box(0.12, 0.1, 0.1, glow, -0.14, 1.25, 0.82));
-          figure.add(box(0.22, 0.5, 0.22, secondary, 0.45, 0.35, 0.25));
-          figure.add(box(0.22, 0.5, 0.22, secondary, -0.45, 0.35, 0.25));
-        } else {
-          figure.add(box(0.9, 1.05, 0.55, primary, 0, 1.15, 0));
-          figure.add(box(0.62, 0.55, 0.55, secondary, 0, 1.95, 0));
-          const armL = box(0.28, 0.95, 0.28, primary, 0.68, 1.15, 0);
-          const armR = box(0.28, 0.95, 0.28, primary, -0.68, 1.15, 0);
-          armL.name = "armL";
-          armR.name = "armR";
-          figure.add(armL, armR);
-          figure.add(box(0.28, 0.7, 0.28, secondary, 0.22, 0.4, 0));
-          figure.add(box(0.28, 0.7, 0.28, secondary, -0.22, 0.4, 0));
-          figure.add(box(0.1, 0.08, 0.06, glow, 0.14, 2.02, 0.28));
-          figure.add(box(0.1, 0.08, 0.06, glow, -0.14, 2.02, 0.28));
+        for (const part of figureCubes(current)) {
+          const material = part.tone === "glow" ? glow : part.tone === "secondary" ? secondary : primary;
+          const mesh = new THREE.Mesh(
+            new THREE.BoxGeometry(part.size[0] * scale, part.size[1] * scale, part.size[2] * scale),
+            material,
+          );
+          mesh.position.set(
+            (part.origin[0] + part.size[0] / 2) * scale,
+            (part.origin[1] + part.size[1] / 2) * scale,
+            (part.origin[2] + part.size[2] / 2) * scale,
+          );
+          mesh.name = part.name;
+          figure.add(mesh);
         }
         rig.add(figure);
         fill.color.set(current.appearance.glow);
@@ -142,13 +108,19 @@ export function PreviewStage({ spec, shaping, idea }: PreviewProps) {
         const current = specRef.current;
         rig.rotation.y = controls.current.yaw + (reduced || controls.current.dragging ? 0 : t * 0.25);
         rig.position.y = reduced ? 0 : Math.sin(t * 1.6) * 0.04;
-        const armL = rig.getObjectByName("armL");
-        const armR = rig.getObjectByName("armR");
+        const armL = rig.getObjectByName("armLeft");
+        const armR = rig.getObjectByName("armRight");
+        const wingL = rig.getObjectByName("wingLeft");
+        const wingR = rig.getObjectByName("wingRight");
         if (armL && armR && !reduced) {
           armL.rotation.x = Math.sin(t * 1.8) * 0.25;
           armR.rotation.x = -Math.sin(t * 1.8) * 0.25;
         }
-        const distance = 7 / controls.current.zoom;
+        if (wingL && wingR && !reduced) {
+          wingL.rotation.z = Math.sin(t * 2.2) * 0.15;
+          wingR.rotation.z = -Math.sin(t * 2.2) * 0.15;
+        }
+        const distance = (current?.silhouette === "dragon" ? 12 : 8) / controls.current.zoom;
         camera.position.z = distance;
         camera.lookAt(0, current?.silhouette === "blade" ? 1.4 : 1.1, 0);
         renderer.render(scene, camera);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import { AccountForm, PENDING_IDEA } from "@/components/account-form";
 import { SiteHeader } from "@/components/site-header";
 import { EXAMPLES, portraitFor } from "@/lib/forge/examples";
@@ -86,8 +87,23 @@ function Home() {
           </div>
         </form>
         {needsAccount ? (
-          <div className="mt-8 rounded-lg border border-line bg-raised p-4">
-            <AccountForm onSignedIn={() => start(idea.trim())} />
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4" role="dialog" aria-modal="true" aria-labelledby="account-title">
+            <div className="relative w-full max-w-sm rounded-lg border border-line bg-raised p-5">
+              <button
+                type="button"
+                aria-label="Close"
+                className="absolute right-3 top-3 grid size-11 place-items-center rounded-md text-muted"
+                onClick={() => {
+                  localStorage.removeItem(PENDING_IDEA);
+                  setNeedsAccount(false);
+                }}
+              >
+                <X className="size-4" />
+              </button>
+              <div id="account-title">
+                <AccountForm onSignedIn={() => start(idea.trim())} />
+              </div>
+            </div>
           </div>
         ) : null}
       </main>

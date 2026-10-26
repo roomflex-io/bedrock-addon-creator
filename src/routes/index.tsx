@@ -75,7 +75,7 @@ function Home() {
             id="idea"
             value={idea}
             maxLength={120}
-            placeholder="A flying dragon"
+            placeholder="A flying dragon that breathes Fire"
             onChange={(event) => setIdea(event.target.value)}
             className="h-14 w-full rounded-lg border border-line bg-raised px-4 text-lg outline-none focus:border-ember"
           />

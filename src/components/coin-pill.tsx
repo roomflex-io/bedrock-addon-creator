@@ -11,9 +11,12 @@ export function CoinPill() {
   const claimGrantLocal = useForge((state) => state.claimGrantLocal);
   const setWallet = useForge((state) => state.setWallet);
   const hydrated = useForge((state) => state.hydrated);
-  const { user } = useCurrentUserState();
+  const { user, isPending } = useCurrentUserState();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const signedIn = Boolean(user && !user.isDevFallback);
+
+  if (isPending || !signedIn) return null;
 
   async function claim() {
     if (wallet.grantClaimed || busy) return;

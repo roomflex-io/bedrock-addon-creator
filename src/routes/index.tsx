@@ -82,6 +82,9 @@ function Home() {
           <button type="submit" className="mx-auto mt-5 block h-12 w-full max-w-md rounded-md bg-ember font-semibold text-ink">
             Create
           </button>
+          <Link to="/edit" className="mx-auto mt-4 block w-full max-w-md text-center text-sm text-muted">
+            Or upload an add-on
+          </Link>
         </form>
         {needsAccount ? (
           <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4" role="dialog" aria-modal="true" aria-labelledby="account-title">

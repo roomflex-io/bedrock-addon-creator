@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LavaGolemDotmcaddonRouteImport } from './routes/LavaGolem[.]mcaddon'
 import { Route as DiscoverRouteImport } from './routes/discover'
+import { Route as EditRouteImport } from './routes/edit'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ApiPackRouteImport } from './routes/api/pack'
@@ -31,6 +32,11 @@ const LavaGolemDotmcaddonRoute = LavaGolemDotmcaddonRouteImport.update({
 const DiscoverRoute = DiscoverRouteImport.update({
   id: '/discover',
   path: '/discover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EditRoute = EditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/LavaGolem.mcaddon': typeof LavaGolemDotmcaddonRoute
   '/discover': typeof DiscoverRoute
+  '/edit': typeof EditRoute
   '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/api/pack': typeof ApiPackRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/LavaGolem.mcaddon': typeof LavaGolemDotmcaddonRoute
   '/discover': typeof DiscoverRoute
+  '/edit': typeof EditRoute
   '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/api/pack': typeof ApiPackRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/LavaGolem.mcaddon': typeof LavaGolemDotmcaddonRoute
   '/discover': typeof DiscoverRoute
+  '/edit': typeof EditRoute
   '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/api/pack': typeof ApiPackRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/LavaGolem.mcaddon'
     | '/discover'
+    | '/edit'
     | '/login'
     | '/projects'
     | '/api/pack'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/LavaGolem.mcaddon'
     | '/discover'
+    | '/edit'
     | '/login'
     | '/projects'
     | '/api/pack'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/LavaGolem.mcaddon'
     | '/discover'
+    | '/edit'
     | '/login'
     | '/projects'
     | '/api/pack'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LavaGolemDotmcaddonRoute: typeof LavaGolemDotmcaddonRoute
   DiscoverRoute: typeof DiscoverRoute
+  EditRoute: typeof EditRoute
   LoginRoute: typeof LoginRoute
   ProjectsRoute: typeof ProjectsRoute
   ApiPackRoute: typeof ApiPackRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/discover'
       fullPath: '/discover'
       preLoaderRoute: typeof DiscoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/edit': {
+      id: '/edit'
+      path: '/edit'
+      fullPath: '/edit'
+      preLoaderRoute: typeof EditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LavaGolemDotmcaddonRoute: LavaGolemDotmcaddonRoute,
   DiscoverRoute: DiscoverRoute,
+  EditRoute: EditRoute,
   LoginRoute: LoginRoute,
   ProjectsRoute: ProjectsRoute,
   ApiPackRoute: ApiPackRoute,
